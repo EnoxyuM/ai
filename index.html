@@ -8,44 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ai Chat</title>
     <meta name="robots" content="noindex, nofollow">
-    <style>
-        body { display: none; }
-    </style>
-    <script>
-        (function() {
-            const SECRET = 'm6Sio4zp';
-            const urlParams = new URLSearchParams(window.location.search);
-            const keyFromUrl = urlParams.get('key');
-            if (keyFromUrl) {
-                localStorage.setItem('chat_access_token', keyFromUrl);
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-            const token = localStorage.getItem('chat_access_token');
-            if (token !== SECRET) {
-                document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Error</title>
-                        <style>
-                            html, body {
-                                background-color: #000 !important;
-                                color: #fff !important;
-                                font-family: monospace;
-                                margin: 20px;
-                                padding: 0;
-                            }
-                        </style>
-                    </head>
-                    <body>Error</body>
-                    </html>
-                `);
-                document.close();
-                window.stop();
-                throw new Error("Unauthorized");
-            }
-        })();
-    </script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -402,7 +364,7 @@
         .message-text {
             line-height: 1.6;
         }
-        
+
         .message-text:empty {
             display: none;
         }
@@ -548,31 +510,50 @@
             top: 15px;
             right: 20px;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 220px;
         }
 
-        #modelSelect {
+        .model-option {
             background-color: var(--chat-bg);
-            color: var(--text-color);
             border: 1px solid #3c4043;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            outline: none;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            transition: border-color 0.2s;
-        }
-
-        #modelSelect:hover {
-            border-color: var(--accent-color);
-        }
-
-        #modelSelect option {
-            background-color: var(--chat-bg);
             color: var(--text-color);
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            user-select: none;
         }
 
-        /* --- Attachments Styles --- */
+        .model-option:hover {
+            border-color: #80868b;
+            background-color: #242526;
+        }
+
+        .model-option.active {
+            border-color: var(--accent-color);
+            background-color: rgba(168, 199, 250, 0.15);
+            box-shadow: 0 0 6px rgba(168, 199, 250, 0.4);
+        }
+
+        .model-option-name {
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        .model-option-info {
+            font-size: 11px;
+            color: #80868b;
+            margin-top: 4px;
+        }
+
+        .model-option.active .model-option-info {
+            color: #a8c7fa;
+        }
+
         .attachments-preview {
             display: flex;
             flex-wrap: wrap;
@@ -679,7 +660,6 @@
             border: 1px solid #3c4043;
             display: block;
         }
-        /* -------------------------- */
 
         .input-row {
             display: flex;
@@ -808,7 +788,7 @@
             color: var(--accent-color);
         }
 
-        /* --- Fullscreen Lightbox Styles --- */
+
         .lightbox {
             display: none;
             position: fixed;
@@ -837,21 +817,16 @@
         .lightbox img {
             display: block;
             margin: auto;
-            /* No max-width/max-height forces 100% original scale */
         }
     </style>
 </head>
 <body>
 
-    <script>
-        document.body.style.display = 'block';
-    </script>
-
     <div class="drag-overlay" id="dragOverlay">
         <div class="drag-overlay-text">Drag & drop files here to attach</div>
     </div>
 
-    <!-- Lightbox Element -->
+
     <div class="lightbox" id="lightbox">
         <div class="lightbox-inner">
             <img id="lightboxImg" src="" alt="Full size view">
@@ -880,13 +855,27 @@
         </div>
 
         <div class="main-content">
-            <div class="model-selector-container">
-                <select id="modelSelect">
-                    <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-                    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                </select>
+            <div class="model-selector-container" id="modelSelectContainer">
+                <div class="model-option" data-value="gemini-3.5-flash">
+                    <div class="model-option-name">Gemini 3.5 Flash</div>
+                    <div class="model-option-info">20 | Best for coding</div>
+                </div>
+                <div class="model-option" data-value="gemini-3.1-flash-lite-preview">
+                    <div class="model-option-name">Gemini 3.1 Flash Lite</div>
+                    <div class="model-option-info">500 | Very fast</div>
+                </div>
+                <div class="model-option" data-value="gemini-3-flash-preview">
+                    <div class="model-option-name">Gemini 3 Flash</div>
+                    <div class="model-option-info">20 | idk</div>
+                </div>
+                <div class="model-option" data-value="gemini-2.5-flash">
+                    <div class="model-option-name">Gemini 2.5 Flash</div>
+                    <div class="model-option-info">20 | idk</div>
+                </div>
+                <div class="model-option" data-value="gemma-4-31b-it">
+                    <div class="model-option-name">Gemma 4 31B</div>
+                    <div class="model-option-info">1500 | Very slow</div>
+                </div>
             </div>
 
             <div class="chat-container" id="chatContainer"></div>
@@ -917,9 +906,17 @@
     <script>
         const WORKER_URL = 'https://ai.enoxy.workers.dev';
 
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('k')) {
+            localStorage.setItem('authKey', urlParams.get('k'));
+
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        const authKey = localStorage.getItem('authKey') || '';
+
         const chatContainer = document.getElementById('chatContainer');
         const promptInput = document.getElementById('promptInput');
-        const modelSelect = document.getElementById('modelSelect');
         const sendBtn = document.getElementById('sendBtn');
         const searchBtn = document.getElementById('searchBtn');
         const fileInput = document.getElementById('fileInput');
@@ -930,11 +927,13 @@
         const historyList = document.getElementById('historyList');
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
+        const modelOptions = document.querySelectorAll('.model-option');
 
         let attachedFiles = [];
         let dragCounter = 0;
         let currentChatId = null;
         let isSearchEnabled = false;
+        let selectedModel = 'gemini-3.5-flash';
 
         const DB_NAME = 'aichats';
         const DB_VERSION = 1;
@@ -1003,6 +1002,25 @@
             });
         }
 
+        function selectModel(modelValue) {
+            selectedModel = modelValue;
+            localStorage.setItem('selectedModel', modelValue);
+            modelOptions.forEach(opt => {
+                if (opt.getAttribute('data-value') === modelValue) {
+                    opt.classList.add('active');
+                } else {
+                    opt.classList.remove('active');
+                }
+            });
+        }
+
+        modelOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                const val = opt.getAttribute('data-value');
+                selectModel(val);
+            });
+        });
+
         const renderer = {
             code(codeOrToken, infostring) {
                 let codeText = '';
@@ -1033,18 +1051,29 @@
                 }
 
                 return `<div class="code-block-wrapper"><button class="copy-code-btn" type="button" title="Copy code"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button><pre><code class="language-${lang}">${highlightedCode}</code></pre></div>`;
+            },
+            image(href, title, text) {
+                let src = href;
+                let altText = text;
+                let titleText = title;
+                if (href && typeof href === 'object') {
+                    src = href.href || '';
+                    altText = href.text || '';
+                    titleText = href.title || '';
+                }
+                return `<img src="${src}" alt="${escapeHTML(altText || '')}" title="${escapeHTML(titleText || '')}" class="clickable-image" style="max-width: 100%; max-height: 500px; border-radius: 8px; margin-top: 8px; display: block; border: 1px solid #3c4043;">`;
             }
         };
         marked.use({ renderer });
 
-        // Управление открытием/закрытием Lightbox
+
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('clickable-image')) {
                 lightboxImg.src = e.target.src;
                 lightbox.classList.add('active');
             } else if (lightbox.classList.contains('active')) {
                 lightbox.classList.remove('active');
-                lightboxImg.src = ''; 
+                lightboxImg.src = '';
             }
         });
 
@@ -1197,7 +1226,7 @@
             attachedFiles.forEach((file, index) => {
                 const item = document.createElement('div');
                 item.className = 'attachment-item';
-                
+
                 const imgSrc = `data:${file.mimeType};base64,${file.base64Data}`;
 
                 item.innerHTML = `
@@ -1234,26 +1263,18 @@
                     parts: m.parts
                 }));
 
-                const activeToken = localStorage.getItem('chat_access_token') || '';
-
                 const response = await fetch(WORKER_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-Chat-Auth': activeToken
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         contents: apiContents,
                         model: modelVal,
-                        webSearch: useWebSearch
+                        webSearch: useWebSearch,
+                        key: authKey
                     })
                 });
-
-                if (response.status === 404) {
-                    localStorage.removeItem('chat_access_token');
-                    window.location.reload();
-                    return;
-                }
 
                 const data = await response.json();
                 const textNode = aiMessageElement.querySelector('.message-text');
@@ -1294,7 +1315,7 @@
 
         async function sendMessage() {
             const prompt = promptInput.value.trim();
-            const model = modelSelect.value;
+            const model = selectedModel;
 
             if (!prompt && attachedFiles.length === 0) return;
 
@@ -1363,7 +1384,6 @@
             await requestAIResponse(currentChatId, model, aiMsgId, aiMessageElement, isSearchEnabled);
         }
 
-        // Обновленная функция принимает 5-й аргумент parts для рендера картинок
         function appendMessage(sender, text, type, msgId, parts = []) {
             const msg = document.createElement('div');
             msg.className = `message ${type}`;
@@ -1373,7 +1393,7 @@
             const contentHTML = isUser ? escapeHTML(text) : text;
             const senderLabelHTML = isUser ? `<span class="message-sender">${sender}</span>` : '';
 
-            // Генерация HTML для картинок, если они есть
+
             let attachmentsHTML = '';
             if (parts && parts.length > 0) {
                 const inlineDatas = parts.filter(p => p.inlineData);
@@ -1441,11 +1461,6 @@
             attachedFiles = [];
             renderAttachments();
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
-
-            const savedModel = localStorage.getItem('selectedModel');
-            if (savedModel) {
-                modelSelect.value = savedModel;
-            }
         }
 
         async function loadHistory() {
@@ -1485,7 +1500,6 @@
             if (!chat) return;
 
             currentChatId = chatId;
-            modelSelect.value = chat.model || 'gemini-3.5-flash';
             chatContainer.innerHTML = '';
 
             chat.messages.forEach(msg => {
@@ -1574,7 +1588,7 @@
             const aiMsgId = Date.now().toString();
             const aiMessageElement = appendMessage('', 'Typing...', 'ai', aiMsgId);
 
-            await requestAIResponse(currentChatId, chat.model || modelSelect.value, aiMsgId, aiMessageElement, isSearchEnabled);
+            await requestAIResponse(currentChatId, selectedModel, aiMsgId, aiMessageElement, isSearchEnabled);
         }
 
         async function branchFromMessage(msgId) {
@@ -1597,7 +1611,7 @@
             const branchedChat = {
                 id: newChatId,
                 title: newTitle,
-                model: chat.model || modelSelect.value,
+                model: selectedModel,
                 createdAt: Date.now(),
                 messages: branchedMessages
             };
@@ -1606,17 +1620,6 @@
             await loadHistory();
             await restoreChat(newChatId);
         }
-
-        modelSelect.addEventListener('change', async () => {
-            localStorage.setItem('selectedModel', modelSelect.value);
-            if (currentChatId) {
-                const chat = await getChat(currentChatId);
-                if (chat) {
-                    chat.model = modelSelect.value;
-                    await saveChat(chat);
-                }
-            }
-        });
 
         newChatBtn.addEventListener('click', startNewChat);
         sendBtn.addEventListener('click', sendMessage);
@@ -1644,7 +1647,9 @@
 
             const savedModel = localStorage.getItem('selectedModel');
             if (savedModel) {
-                modelSelect.value = savedModel;
+                selectModel(savedModel);
+            } else {
+                selectModel('gemini-3.5-flash');
             }
 
             try {
