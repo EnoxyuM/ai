@@ -1,2 +1,2 @@
 # ai
-Ai Chat
+Ai Chat (Private repository)
