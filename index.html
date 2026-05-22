@@ -173,7 +173,7 @@
             font-size: 13.5px;
             transition: all 0.2s;
             position: relative;
-            min-height: 38px; /* Добавлено для сохранения стабильной высоты при наведении */
+            min-height: 38px;
         }
 
         .history-item:hover {
@@ -652,6 +652,31 @@
             scrollbar-color: #4f5357 var(--input-bg);
         }
 
+        .mic-btn {
+            background: none;
+            border: none;
+            color: #80868b;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mic-btn:hover {
+            background-color: #3c4043;
+            color: var(--text-color);
+        }
+
+        .mic-btn.active {
+            color: #ff6b6b;
+            background-color: rgba(255, 107, 107, 0.15);
+            box-shadow: 0 0 4px rgba(255, 107, 107, 0.3);
+        }
+
         .search-btn {
             background: none;
             border: none;
@@ -724,17 +749,13 @@
     </style>
 </head>
 <body>
-
     <script>
         document.body.style.display = 'block';
     </script>
-
     <div class="drag-overlay" id="dragOverlay">
         <div class="drag-overlay-text">Drag & drop files here to attach</div>
     </div>
-
     <div class="app-container">
-
         <div class="sidebar">
             <button class="new-chat-btn" id="newChatBtn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -745,7 +766,6 @@
             </button>
             <div class="history-title">History</div>
             <div class="history-list" id="historyList"></div>
-
             <div class="sidebar-footer">
                 <div class="info-container">
                     <span class="info-icon">i</span>
@@ -753,7 +773,6 @@
                 </div>
             </div>
         </div>
-
         <div class="main-content">
             <div class="model-selector-container">
                 <select id="modelSelect">
@@ -763,16 +782,23 @@
                     <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                 </select>
             </div>
-
             <div class="chat-container" id="chatContainer"></div>
-
             <div class="input-area-wrapper">
                 <div class="input-container">
                     <div class="attachments-preview" id="attachmentsPreview"></div>
                     <div class="input-row">
                         <button class="attach-btn" id="attachBtn" title="Attach files">+</button>
                         <input type="file" id="fileInput" multiple style="display: none;">
-                        <textarea id="promptInput" rows="1" placeholder="Ask Gemini..." autocomplete="off"></textarea>
+                        <textarea id="promptInput" rows="1" placeholder="Anything" autocomplete="off"></textarea>
+
+                        <button class="mic-btn" id="micBtn" title="Voice Input">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </button>
 
                         <button class="search-btn" id="searchBtn" title="Search the Web (Disabled)">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -797,6 +823,7 @@
         const modelSelect = document.getElementById('modelSelect');
         const sendBtn = document.getElementById('sendBtn');
         const searchBtn = document.getElementById('searchBtn');
+        const micBtn = document.getElementById('micBtn');
         const fileInput = document.getElementById('fileInput');
         const attachBtn = document.getElementById('attachBtn');
         const attachmentsPreview = document.getElementById('attachmentsPreview');
@@ -808,6 +835,8 @@
         let dragCounter = 0;
         let currentChatId = null;
         let isSearchEnabled = false;
+        let isListening = false;
+        let recognition = null;
 
         const DB_NAME = 'aichats';
         const DB_VERSION = 1;
@@ -1479,6 +1508,56 @@
             }
         });
 
+        function initVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                micBtn.style.display = 'none';
+                console.warn('Web Speech API is not supported in this browser.');
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = navigator.language || 'ru-RU';
+
+            recognition.onstart = () => {
+                isListening = true;
+                micBtn.classList.add('active');
+                micBtn.title = "Listening... Click to stop";
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                micBtn.classList.remove('active');
+                micBtn.title = "Voice Input";
+            };
+
+            recognition.onerror = (e) => {
+                console.error('Speech recognition error:', e.error);
+                isListening = false;
+                micBtn.classList.remove('active');
+                micBtn.title = "Voice Input";
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                if (transcript) {
+                    const currentVal = promptInput.value;
+                    promptInput.value = (currentVal ? currentVal + ' ' : '') + transcript;
+                    adjustInputHeight();
+                }
+            };
+
+            micBtn.addEventListener('click', () => {
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+        }
+
         async function initializeApp() {
             adjustInputHeight();
 
@@ -1494,6 +1573,7 @@
                 console.error('Database load warning:', error);
             }
             startNewChat();
+            initVoiceRecognition();
         }
 
         initializeApp();
