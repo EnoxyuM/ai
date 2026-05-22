@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
@@ -6,30 +7,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ai Chat</title>
-
     <meta name="robots" content="noindex, nofollow">
-
     <style>
-
         body { display: none; }
     </style>
-
     <script>
-
         (function() {
             const SECRET = 'm6Sio4zp';
             const urlParams = new URLSearchParams(window.location.search);
             const keyFromUrl = urlParams.get('key');
-
             if (keyFromUrl) {
                 localStorage.setItem('chat_access_token', keyFromUrl);
-
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
-
             const token = localStorage.getItem('chat_access_token');
             if (token !== SECRET) {
-
                 document.write(`
                     <!DOCTYPE html>
                     <html>
@@ -54,7 +46,6 @@
             }
         })();
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -106,7 +97,6 @@
             overflow: hidden;
         }
 
-
         .app-container {
             display: flex;
             width: 100vw;
@@ -114,7 +104,6 @@
             overflow: hidden;
             position: relative;
         }
-
 
         .sidebar {
             position: absolute;
@@ -184,6 +173,7 @@
             font-size: 13.5px;
             transition: all 0.2s;
             position: relative;
+            min-height: 38px; /* Добавлено для сохранения стабильной высоты при наведении */
         }
 
         .history-item:hover {
@@ -226,7 +216,6 @@
         .history-item:hover .history-item-delete {
             display: flex;
         }
-
 
         .sidebar-footer {
             padding: 16px;
@@ -301,7 +290,6 @@
             opacity: 1;
         }
 
-
         .main-content {
             flex: 1;
             display: flex;
@@ -351,7 +339,6 @@
             color: #80868b;
             font-weight: bold;
         }
-
 
         .message-actions {
             position: sticky;
@@ -739,7 +726,6 @@
 <body>
 
     <script>
-
         document.body.style.display = 'block';
     </script>
 
@@ -767,7 +753,6 @@
                 </div>
             </div>
         </div>
-
 
         <div class="main-content">
             <div class="model-selector-container">
@@ -824,7 +809,6 @@
         let currentChatId = null;
         let isSearchEnabled = false;
 
-
         const DB_NAME = 'aichats';
         const DB_VERSION = 1;
         const STORE_NAME = 'chats';
@@ -871,7 +855,6 @@
             });
         }
 
-
         function getChat(id) {
             return new Promise((resolve, reject) => {
                 if (!id) return resolve(null);
@@ -892,7 +875,6 @@
                 request.onerror = (e) => reject(e);
             });
         }
-
 
         const renderer = {
             code(codeOrToken, infostring) {
@@ -927,7 +909,6 @@
             }
         };
         marked.use({ renderer });
-
 
         chatContainer.addEventListener('click', async (e) => {
             const copyCodeBtn = e.target.closest('.copy-code-btn');
@@ -992,7 +973,6 @@
             }
         });
 
-
         function adjustInputHeight() {
             promptInput.style.height = 'auto';
             const newHeight = promptInput.scrollHeight;
@@ -1000,7 +980,6 @@
         }
 
         promptInput.addEventListener('input', adjustInputHeight);
-
 
         attachBtn.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
@@ -1092,7 +1071,6 @@
             attachedFiles.splice(index, 1);
             renderAttachments();
         };
-
 
         function getChatTitle(prompt) {
             if (!prompt) return 'New Chat';
@@ -1297,14 +1275,12 @@
             );
         }
 
-
         function startNewChat() {
             currentChatId = null;
             chatContainer.innerHTML = '';
             attachedFiles = [];
             renderAttachments();
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
-
 
             const savedModel = localStorage.getItem('selectedModel');
             if (savedModel) {
@@ -1449,11 +1425,8 @@
             const clickIdx = chat.messages.findIndex(m => m.id === msgId);
             if (clickIdx === -1) return;
 
-
             const branchedMessages = chat.messages.slice(0, clickIdx + 1);
-
             const newChatId = Date.now().toString();
-
 
             let baseTitle = chat.title;
             if (baseTitle.endsWith(' (Branch)')) {
@@ -1474,7 +1447,6 @@
             await restoreChat(newChatId);
         }
 
-
         modelSelect.addEventListener('change', async () => {
             localStorage.setItem('selectedModel', modelSelect.value);
             if (currentChatId) {
@@ -1485,7 +1457,6 @@
                 }
             }
         });
-
 
         newChatBtn.addEventListener('click', startNewChat);
         sendBtn.addEventListener('click', sendMessage);
@@ -1508,10 +1479,8 @@
             }
         });
 
-
         async function initializeApp() {
             adjustInputHeight();
-
 
             const savedModel = localStorage.getItem('selectedModel');
             if (savedModel) {
