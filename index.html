@@ -1,8 +1,11 @@
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64x64.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Chat</title>
+    <title>Ai Chat</title>
 
     <meta name="robots" content="noindex, nofollow">
 
@@ -31,25 +34,23 @@
                     <!DOCTYPE html>
                     <html>
                     <head>
-                        <title>404 Not Found</title>
+                        <title>Error</title>
                         <style>
-                            html, body { display: block !important; background-color: #fff !important; color: #000 !important; font-family: Arial, sans-serif; padding: 20px; margin: 0; }
-                            h1 { font-size: 24px; margin-bottom: 5px; color: #000 !important; font-weight: normal; }
-                            hr { border: 0; border-top: 1px solid #ccc; margin: 15px 0; }
-                            address { font-style: italic; color: #555; }
+                            html, body {
+                                background-color: #000 !important;
+                                color: #fff !important;
+                                font-family: monospace;
+                                margin: 20px;
+                                padding: 0;
+                            }
                         </style>
                     </head>
-                    <body>
-                        <h1>404 Not Found</h1>
-                        <p>The requested URL was not found on this server.</p>
-                        <hr>
-                        <address>Apache/2.4.41 (Ubuntu) Server at enoxyum.github.io Port 443</address>
-                    </body>
+                    <body>Error</body>
                     </html>
                 `);
                 document.close();
                 window.stop();
-                throw new Error("404 Not Found");
+                throw new Error("Unauthorized");
             }
         })();
     </script>
@@ -1127,7 +1128,6 @@
                 });
 
                 if (response.status === 404) {
-
                     localStorage.removeItem('chat_access_token');
                     window.location.reload();
                     return;
