@@ -267,7 +267,7 @@
             right: 0;
             bottom: 0;
             background-color: rgba(19, 19, 20, 0.95);
-            z-index: 500;
+            z-index: 50;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -1087,7 +1087,7 @@
             margin: auto;
         }
 
-
+        /* Шапка мобильного интерфейса */
         .mobile-header {
             display: none;
             align-items: center;
@@ -1097,7 +1097,7 @@
             border-bottom: 1px solid #2d2f31;
             height: 56px;
             flex-shrink: 0;
-            z-index: 90;
+            z-index: 120;
         }
 
         .mobile-header-title {
@@ -1137,59 +1137,151 @@
             backdrop-filter: blur(2px);
         }
 
-
+        /* Адаптивные правила для мобильных устройств */
         @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column; /* Вертикальный стек */
+            }
+
             .mobile-header {
                 display: flex;
+                order: 1; /* Всегда первый элемент */
             }
 
-            .mobile-overlay.active {
-                display: block;
+            /* Панель моделей и API сверху (1/3 экрана) */
+            .right-panel {
+                order: 2; /* Расположен вторым, прямо под шапкой */
+                width: 100% !important;
+                height: 33.33vh !important; /* Ровно треть высоты viewport */
+                border-left: none;
+                border-bottom: 1px solid #2d2f31;
+                display: flex !important;
+                flex-direction: row !important; /* Разделен на лево и право */
+                transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s, border-bottom 0.3s;
+                opacity: 1;
+                pointer-events: auto;
+                z-index: 90;
+                background-color: var(--bg-color);
             }
 
+            /* Класс скрытия панели сверху */
+            .right-panel.closed {
+                height: 0 !important;
+                border-bottom: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+
+            /* Колонки внутри верхней панели */
+            .model-selector-container, .api-manager-container {
+                flex: 1 !important;
+                height: 100% !important;
+                overflow-y: auto !important;
+                border-top: none !important;
+            }
+
+            .api-manager-container {
+                border-left: 1px solid #2d2f31 !important;
+                padding-bottom: 8px !important;
+            }
+
+            /* Диалоги и поле ввода снизу (2/3 экрана) */
+            .main-content {
+                order: 3; /* Нижняя секция */
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                height: auto;
+                overflow: hidden;
+                position: relative;
+            }
+
+            /* Боковая панель истории выезжает СПРАВА */
             .sidebar {
                 position: fixed;
-                left: 0;
+                right: 0;
+                left: auto;
                 top: 0;
                 bottom: 0;
-                transform: translateX(-100%);
+                width: 280px;
+                transform: translateX(100%);
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 4px 0 15px rgba(0,0,0,0.5);
-                z-index: 110;
+                box-shadow: -4px 0 15px rgba(0,0,0,0.5);
+                z-index: 1000;
+                border-right: none;
+                border-left: 1px solid #2d2f31;
             }
 
             .sidebar.open {
                 transform: translateX(0);
             }
 
-            .right-panel {
-                position: fixed;
-                right: 0;
+            .mobile-overlay.active {
+                display: block;
+            }
+
+            /* Позиционирование гифки в нижней секции 2/3, чтобы она не перекрывала ввод API */
+            .gif-overlay {
+                position: absolute;
                 top: 0;
                 bottom: 0;
-                transform: translateX(100%);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: -4px 0 15px rgba(0,0,0,0.5);
-                z-index: 110;
-            }
-
-            .right-panel.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                width: 100%;
+                left: 0;
+                right: 0;
+                height: 100%;
+                z-index: 45; /* ниже верхней панели */
             }
 
             .gif-element {
-                max-width: 90%;
-                max-height: 55%;
+                max-width: 80%;
+                max-height: 45%;
+                object-fit: contain;
             }
 
             .gif-link {
-                font-size: 13px;
+                font-size: 11px;
                 word-break: break-all;
                 padding: 0 12px;
+            }
+
+            /* Оптимизация размеров для мобильных списков */
+            .right-panel .right-panel-title {
+                padding: 8px 12px;
+                font-size: 10px;
+            }
+
+            .model-option {
+                padding: 6px 10px;
+            }
+
+            .model-option-name {
+                font-size: 12px;
+            }
+
+            .model-option-info {
+                font-size: 9px;
+            }
+
+            .api-form {
+                margin: 4px;
+                padding: 6px;
+                gap: 6px;
+            }
+
+            .api-input {
+                padding: 4px 8px;
+            }
+
+            .api-submit-btn {
+                padding: 4px;
+            }
+
+            .api-add-container {
+                padding: 4px 8px;
+            }
+
+            .api-add-trigger-btn {
+                padding: 6px 12px;
+                font-size: 12px;
             }
         }
 
@@ -1238,10 +1330,27 @@
         </div>
     </div>
 
-
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <div class="app-container">
+
+        <!-- Шапка: видна на мобилках всегда. Кнопка истории СЛЕВА, кнопка настроек СПРАВА -->
+        <div class="mobile-header">
+            <button class="mobile-header-btn" id="mobileMenuBtn" title="History">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="mobile-header-title">Ai Chat</div>
+            <button class="mobile-header-btn" id="mobileSettingsBtn" title="Models & Keys">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </div>
 
 
         <div class="sidebar">
@@ -1265,24 +1374,6 @@
 
 
         <div class="main-content">
-
-
-            <div class="mobile-header">
-                <button class="mobile-header-btn" id="mobileMenuBtn" title="History">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
-                <div class="mobile-header-title">Ai Chat</div>
-                <button class="mobile-header-btn" id="mobileSettingsBtn" title="Models & Keys">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                </button>
-            </div>
 
             <div class="gif-overlay" id="gifOverlay">
                 <img class="gif-element" src="gifs/gem.gif" alt="Gemini Guide">
@@ -1314,9 +1405,10 @@
         </div>
 
 
+        <!-- Верхняя панель (1/3 экрана по умолчанию) -->
         <div class="right-panel">
-            <div class="right-panel-title">Models</div>
             <div class="model-selector-container" id="modelSelectContainer">
+                <div class="right-panel-title">Models</div>
                 <div class="model-option" data-value="gemini-3.5-flash">
                     <div class="model-option-name">Gemini 3.5 Flash</div>
                     <div class="model-option-info">20 | Best for coding</div>
@@ -1383,7 +1475,7 @@
         const addGeminiBtn = document.getElementById('addGeminiBtn');
         const gifOverlay = document.getElementById('gifOverlay');
 
-
+        // Элементы управления для мобильных устройств
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
         const mobileOverlay = document.getElementById('mobileOverlay');
@@ -1596,7 +1688,6 @@
 
                     saveApisToStorage();
                     renderApiManager();
-                    closeMobilePanels();
                 });
 
                 apiList.appendChild(form);
@@ -1639,7 +1730,6 @@
                         selectedApiId = item.id;
                         saveApisToStorage();
                         renderApiManager();
-                        closeMobilePanels();
                     });
 
                     div.querySelector('.api-action-btn.share').addEventListener('click', async (e) => {
@@ -1727,7 +1817,6 @@
             opt.addEventListener('click', () => {
                 const val = opt.getAttribute('data-value');
                 selectModel(val);
-                closeMobilePanels();
             });
         });
 
@@ -2374,24 +2463,24 @@
             await restoreChat(newChatId);
         }
 
-
+        // Кнопки управления шапкой
         mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.add('open');
-            rightPanel.classList.remove('open');
-            mobileOverlay.classList.add('active');
+            sidebar.classList.toggle('open');
+            if (sidebar.classList.contains('open')) {
+                mobileOverlay.classList.add('active');
+            } else {
+                mobileOverlay.classList.remove('active');
+            }
         });
 
         mobileSettingsBtn.addEventListener('click', () => {
-            rightPanel.classList.add('open');
-            sidebar.classList.remove('open');
-            mobileOverlay.classList.add('active');
+            rightPanel.classList.toggle('closed');
         });
 
         mobileOverlay.addEventListener('click', closeMobilePanels);
 
         function closeMobilePanels() {
             sidebar.classList.remove('open');
-            rightPanel.classList.remove('open');
             mobileOverlay.classList.remove('active');
         }
 
