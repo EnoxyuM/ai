@@ -67,7 +67,7 @@
             position: relative;
         }
 
-        /* Левая панель */
+
         .sidebar {
             width: 260px;
             background-color: var(--bg-color);
@@ -248,7 +248,7 @@
             opacity: 1;
         }
 
-        /* Центральная область */
+
         .main-content {
             flex: 1;
             display: flex;
@@ -256,6 +256,50 @@
             height: 100%;
             overflow: hidden;
             position: relative;
+        }
+
+
+        .gif-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(19, 19, 20, 0.95);
+            z-index: 500;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 24px;
+        }
+
+        .gif-overlay.active {
+            display: flex;
+        }
+
+        .gif-element {
+            max-width: 85%;
+            max-height: 70%;
+            border-radius: 12px;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            object-fit: contain;
+        }
+
+        .gif-link {
+            color: var(--accent-color);
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: opacity 0.2s;
+        }
+
+        .gif-link:hover {
+            text-decoration: underline;
+            opacity: 0.9;
         }
 
         .chat-container {
@@ -501,7 +545,7 @@
             border: 1px solid #3c4043;
         }
 
-        /* Правая боковая панель */
+
         .right-panel {
             width: 260px;
             background-color: var(--bg-color);
@@ -523,7 +567,7 @@
             padding: 0 8px;
         }
 
-        /* Менеджер API занимает 1/3 высоты */
+
         .api-manager-container {
             height: 33%;
             display: flex;
@@ -588,7 +632,7 @@
             font-weight: inherit;
         }
 
-        /* Иконки действий на API появляются только при наведении */
+
         .api-action-btn {
             background: none;
             border: none;
@@ -677,7 +721,7 @@
             position: relative;
         }
 
-        /* Кнопка добавления API идентична New Chat */
+
         .api-add-trigger-btn {
             width: 100%;
             padding: 10px 16px;
@@ -733,7 +777,7 @@
             background-color: #2d2f31;
         }
 
-        /* Выбор модели идентичен истории */
+
         .model-option {
             display: flex;
             flex-direction: column;
@@ -770,57 +814,6 @@
 
         .model-option.active .model-option-info {
             color: #a8c7fa;
-        }
-
-        /* Наложенный контейнер для воспроизведения видео */
-        .video-overlay {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(19, 19, 20, 0.95);
-            z-index: 500;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-        }
-
-        .video-overlay.active {
-            display: flex;
-        }
-
-        .video-overlay-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            max-width: 90%;
-            max-height: 90%;
-        }
-
-        .video-overlay-content video {
-            max-width: 100%;
-            max-height: 65vh;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            border: 1px solid #3c4043;
-            outline: none;
-        }
-
-        .overlay-link {
-            color: var(--accent-color);
-            font-size: 18px;
-            font-weight: 600;
-            text-decoration: none;
-            text-align: center;
-            transition: color 0.2s;
-        }
-
-        .overlay-link:hover {
-            color: #fff;
-            text-decoration: underline;
         }
 
         .attachments-preview {
@@ -1102,7 +1095,7 @@
 
     <div class="app-container">
 
-        <!-- Левая панель -->
+
         <div class="sidebar">
             <button class="new-chat-btn" id="newChatBtn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1122,14 +1115,12 @@
             </div>
         </div>
 
-        <!-- Центральный диалог (Занимает всё оставшееся пространство без сжатия) -->
+
         <div class="main-content">
-            <!-- Видео-наложение по центру экрана -->
-            <div class="video-overlay" id="videoOverlay">
-                <div class="video-overlay-content">
-                    <video id="overlayVideo" src="/gifs/gem.mp4" loop muted playsinline></video>
-                    <a href="https://aistudio.google.com/app/api-keys" target="_blank" class="overlay-link">Get API here: https://aistudio.google.com/app/api-keys</a>
-                </div>
+
+            <div class="gif-overlay" id="gifOverlay">
+                <img class="gif-element" src="gifs/gem.gif" alt="Gemini Guide">
+                <a href="https://aistudio.google.com/app/api-keys" target="_blank" rel="noopener noreferrer" class="gif-link">Get API here: https://aistudio.google.com/app/api-keys</a>
             </div>
 
             <div class="chat-container" id="chatContainer"></div>
@@ -1156,7 +1147,7 @@
             </div>
         </div>
 
-        <!-- Правая панель -->
+
         <div class="right-panel">
             <div class="right-panel-title">Models</div>
             <div class="model-selector-container" id="modelSelectContainer">
@@ -1182,7 +1173,7 @@
                 </div>
             </div>
 
-            <!-- Раздел API Keys (по образу и подобию левого сайдбара) -->
+
             <div class="api-manager-container">
                 <div class="right-panel-title">API Keys</div>
                 <div class="api-list" id="apiList"></div>
@@ -1224,10 +1215,7 @@
         const apiAddTriggerBtn = document.getElementById('apiAddTriggerBtn');
         const apiDropdownMenu = document.getElementById('apiDropdownMenu');
         const addGeminiBtn = document.getElementById('addGeminiBtn');
-
-        // Элементы наложения видео
-        const videoOverlay = document.getElementById('videoOverlay');
-        const overlayVideo = document.getElementById('overlayVideo');
+        const gifOverlay = document.getElementById('gifOverlay');
 
         let attachedFiles = [];
         let dragCounter = 0;
@@ -1239,9 +1227,9 @@
         let selectedApiId = null;
         let editingApiId = null;
 
-        // Флаги управления воспроизведением видео
-        let isGeminiBtnHovered = false;
-        let isApiFieldFocused = false;
+
+        let isGeminiHovered = false;
+        let isApiFormActive = false;
 
         const DB_NAME = 'aichats';
         const DB_VERSION = 1;
@@ -1367,19 +1355,12 @@
             renderApiManager();
         }
 
-        // Обновление состояния видео-наложения по флагам
-        function syncVideoOverlay() {
-            if (isGeminiBtnHovered || isApiFieldFocused) {
-                if (!videoOverlay.classList.contains('active')) {
-                    videoOverlay.classList.add('active');
-                    overlayVideo.play().catch(() => {});
-                }
+
+        function updateGifOverlayVisibility() {
+            if (isGeminiHovered || isApiFormActive) {
+                gifOverlay.classList.add('active');
             } else {
-                if (videoOverlay.classList.contains('active')) {
-                    videoOverlay.classList.remove('active');
-                    overlayVideo.pause();
-                    overlayVideo.currentTime = 0;
-                }
+                gifOverlay.classList.remove('active');
             }
         }
 
@@ -1389,6 +1370,10 @@
             if (savedApis.length === 0 && !showForm) {
                 showForm = true;
             }
+
+
+            isApiFormActive = showForm;
+            updateGifOverlayVisibility();
 
             if (showForm) {
                 const form = document.createElement('div');
@@ -1402,22 +1387,9 @@
                     <button class="api-submit-btn" id="apiFormSubmit">${editingApiId ? 'Save' : 'Add'}</button>
                 `;
 
-                const formKeyInput = form.querySelector('#apiFormKey');
-
-                // Мониторинг фокуса на поле ключа API
-                formKeyInput.addEventListener('focus', () => {
-                    isApiFieldFocused = true;
-                    syncVideoOverlay();
-                });
-
-                formKeyInput.addEventListener('blur', () => {
-                    isApiFieldFocused = false;
-                    syncVideoOverlay();
-                });
-
                 const submitBtn = form.querySelector('#apiFormSubmit');
                 submitBtn.addEventListener('click', () => {
-                    const keyVal = formKeyInput.value.trim();
+                    const keyVal = form.querySelector('#apiFormKey').value.trim();
                     let nameVal = form.querySelector('#apiFormName').value.trim();
 
                     if (!keyVal) return;
@@ -1448,9 +1420,6 @@
                         });
                         selectedApiId = newId;
                     }
-
-                    isApiFieldFocused = false;
-                    syncVideoOverlay();
 
                     saveApisToStorage();
                     renderApiManager();
@@ -1550,15 +1519,15 @@
             renderApiManager(true);
         });
 
-        // Мониторинг наведения мыши на кнопку Gemini в меню Add API
+
         addGeminiBtn.addEventListener('mouseenter', () => {
-            isGeminiBtnHovered = true;
-            syncVideoOverlay();
+            isGeminiHovered = true;
+            updateGifOverlayVisibility();
         });
 
         addGeminiBtn.addEventListener('mouseleave', () => {
-            isGeminiBtnHovered = false;
-            syncVideoOverlay();
+            isGeminiHovered = false;
+            updateGifOverlayVisibility();
         });
 
         function getActiveApiKey() {
