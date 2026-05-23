@@ -525,7 +525,6 @@
             word-wrap: break-word;
         }
 
-
         .message-timer {
             font-size: 11px;
             color: #80868b;
@@ -1087,6 +1086,144 @@
             display: block;
             margin: auto;
         }
+
+
+        .mobile-header {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid #2d2f31;
+            height: 56px;
+            flex-shrink: 0;
+            z-index: 90;
+        }
+
+        .mobile-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .mobile-header-btn {
+            background: none;
+            border: none;
+            color: #80868b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .mobile-header-btn:hover, .mobile-header-btn:active {
+            color: var(--text-color);
+            background-color: #2a2b2d;
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 95;
+            backdrop-filter: blur(2px);
+        }
+
+
+        @media (max-width: 768px) {
+            .mobile-header {
+                display: flex;
+            }
+
+            .mobile-overlay.active {
+                display: block;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+                z-index: 110;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .right-panel {
+                position: fixed;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: -4px 0 15px rgba(0,0,0,0.5);
+                z-index: 110;
+            }
+
+            .right-panel.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                width: 100%;
+            }
+
+            .gif-element {
+                max-width: 90%;
+                max-height: 55%;
+            }
+
+            .gif-link {
+                font-size: 13px;
+                word-break: break-all;
+                padding: 0 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .input-area-wrapper {
+                padding: 10px;
+            }
+
+            .input-container {
+                padding: 8px 12px;
+                border-radius: 20px;
+            }
+
+            #promptInput {
+                font-size: 15px;
+            }
+
+            .attach-btn, .search-btn, .send-btn {
+                width: 32px;
+                height: 32px;
+            }
+
+            .chat-container {
+                padding: 12px;
+            }
+
+            .message.ai {
+                padding: 6px 12px 6px 0;
+            }
+
+            .message.user {
+                padding: 8px 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1100,6 +1237,9 @@
             <img id="lightboxImg" src="" alt="Full size view">
         </div>
     </div>
+
+
+    <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <div class="app-container">
 
@@ -1125,6 +1265,24 @@
 
 
         <div class="main-content">
+
+
+            <div class="mobile-header">
+                <button class="mobile-header-btn" id="mobileMenuBtn" title="History">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="mobile-header-title">Ai Chat</div>
+                <button class="mobile-header-btn" id="mobileSettingsBtn" title="Models & Keys">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
 
             <div class="gif-overlay" id="gifOverlay">
                 <img class="gif-element" src="gifs/gem.gif" alt="Gemini Guide">
@@ -1224,6 +1382,13 @@
         const apiDropdownMenu = document.getElementById('apiDropdownMenu');
         const addGeminiBtn = document.getElementById('addGeminiBtn');
         const gifOverlay = document.getElementById('gifOverlay');
+
+
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+        const sidebar = document.querySelector('.sidebar');
+        const rightPanel = document.querySelector('.right-panel');
 
         let attachedFiles = [];
         let dragCounter = 0;
@@ -1431,6 +1596,7 @@
 
                     saveApisToStorage();
                     renderApiManager();
+                    closeMobilePanels();
                 });
 
                 apiList.appendChild(form);
@@ -1473,6 +1639,7 @@
                         selectedApiId = item.id;
                         saveApisToStorage();
                         renderApiManager();
+                        closeMobilePanels();
                     });
 
                     div.querySelector('.api-action-btn.share').addEventListener('click', async (e) => {
@@ -1560,6 +1727,7 @@
             opt.addEventListener('click', () => {
                 const val = opt.getAttribute('data-value');
                 selectModel(val);
+                closeMobilePanels();
             });
         });
 
@@ -1796,20 +1964,17 @@
             return title;
         }
 
-
         function formatTime(seconds) {
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = (seconds % 60).toString().padStart(2, '0');
             return `${m}:${s}`;
         }
 
-
         function clearAllTimers() {
             document.querySelectorAll('.message-timer').forEach(el => el.remove());
         }
 
         async function requestAIResponse(chatId, modelVal, aiMsgId, aiMessageElement, useWebSearch = false) {
-
             let seconds = 0;
             const timerEl = aiMessageElement.querySelector('.message-timer');
             if (timerEl) {
@@ -1883,7 +2048,6 @@
             } catch (error) {
                 aiMessageElement.querySelector('.message-text').textContent = `Network error: ${error.message}`;
             } finally {
-
                 clearInterval(timerInterval);
                 sendBtn.disabled = false;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -1901,7 +2065,6 @@
                 alert('Please add and select a Gemini API key in the bottom right panel first.');
                 return;
             }
-
 
             clearAllTimers();
 
@@ -1965,7 +2128,6 @@
             sendBtn.disabled = true;
 
             const aiMsgId = (Date.now() + 1).toString();
-
             const aiMessageElement = appendMessage('', '', 'ai', aiMsgId);
 
             await requestAIResponse(currentChatId, model, aiMsgId, aiMessageElement, isSearchEnabled);
@@ -2048,6 +2210,7 @@
             attachedFiles = [];
             renderAttachments();
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+            closeMobilePanels();
         }
 
         async function loadHistory() {
@@ -2105,6 +2268,7 @@
                 }
             });
             chatContainer.scrollTop = chatContainer.scrollHeight;
+            closeMobilePanels();
         }
 
         async function deleteChat(chatId) {
@@ -2135,7 +2299,6 @@
 
             const clickIdx = chat.messages.findIndex(m => m.id === msgId);
             if (clickIdx === -1) return;
-
 
             clearAllTimers();
 
@@ -2209,6 +2372,27 @@
             await saveChat(branchedChat);
             await loadHistory();
             await restoreChat(newChatId);
+        }
+
+
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            rightPanel.classList.remove('open');
+            mobileOverlay.classList.add('active');
+        });
+
+        mobileSettingsBtn.addEventListener('click', () => {
+            rightPanel.classList.add('open');
+            sidebar.classList.remove('open');
+            mobileOverlay.classList.add('active');
+        });
+
+        mobileOverlay.addEventListener('click', closeMobilePanels);
+
+        function closeMobilePanels() {
+            sidebar.classList.remove('open');
+            rightPanel.classList.remove('open');
+            mobileOverlay.classList.remove('active');
         }
 
         newChatBtn.addEventListener('click', startNewChat);
