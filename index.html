@@ -472,7 +472,7 @@
             margin-bottom: 8px !important;
         }
 
-        .copy-code-btn {
+        .code-actions-container {
             position: sticky !important;
             float: right;
             top: 8px !important;
@@ -480,6 +480,12 @@
             margin-top: 8px;
             margin-right: 8px;
             margin-bottom: -30px;
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .copy-code-btn, .run-code-btn {
             background-color: rgba(30, 31, 32, 0.85);
             border: 1px solid #3c4043;
             color: #80868b;
@@ -490,12 +496,11 @@
             width: 28px;
             height: 28px;
             border-radius: 4px;
-            z-index: 10;
             transition: all 0.2s;
             backdrop-filter: blur(2px);
         }
 
-        .copy-code-btn:hover {
+        .copy-code-btn:hover, .run-code-btn:hover {
             color: #fff;
             background-color: #2a2b2d;
             border-color: #80868b;
@@ -1047,7 +1052,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 10000;
             border: 3px dashed var(--accent-color);
             pointer-events: none;
         }
@@ -1141,6 +1146,56 @@
             background-color: rgba(0, 0, 0, 0.6);
             z-index: 95;
             backdrop-filter: blur(2px);
+        }
+
+
+        .code-runner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #131314;
+            z-index: 20000;
+        }
+
+        .code-runner-overlay.active {
+            display: block;
+        }
+
+        .code-runner-overlay iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #ffffff;
+        }
+
+        .code-runner-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background-color: rgba(30, 31, 32, 0.85);
+            border: 1px solid #3c4043;
+            color: #e3e3e3;
+            border-radius: 50%;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20001;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+
+        .code-runner-close:hover {
+            background-color: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border-color: #ff6b6b;
         }
 
 
@@ -1343,6 +1398,12 @@
         </div>
     </div>
 
+
+    <div class="code-runner-overlay" id="codeRunnerOverlay">
+        <button class="code-runner-close" id="codeRunnerClose" title="Exit Fullscreen">&times;</button>
+        <iframe id="codeRunnerFrame" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+    </div>
+
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <div class="app-container">
@@ -1476,6 +1537,9 @@
         const addGeminiBtn = document.getElementById('addGeminiBtn');
         const gifOverlay = document.getElementById('gifOverlay');
 
+        const codeRunnerOverlay = document.getElementById('codeRunnerOverlay');
+        const codeRunnerClose = document.getElementById('codeRunnerClose');
+        const codeRunnerFrame = document.getElementById('codeRunnerFrame');
 
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
@@ -1860,7 +1924,28 @@
                     highlightedCode = escapeHTML(codeText);
                 }
 
-                return `<div class="code-block-wrapper"><button class="copy-code-btn" type="button" title="Copy code"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button><pre><code class="language-${lang}">${highlightedCode}</code></pre></div>`;
+                const normalizedLang = lang.toLowerCase();
+                const isRunnable = ['html', 'htm', 'javascript', 'js', 'svg', 'xml', 'css'].includes(normalizedLang);
+                const runBtnHtml = isRunnable ? `
+                    <button class="run-code-btn" type="button" title="Run code">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+                ` : '';
+
+                return `<div class="code-block-wrapper">
+                    <div class="code-actions-container">
+                        ${runBtnHtml}
+                        <button class="copy-code-btn" type="button" title="Copy code">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <pre><code class="language-${lang}">${highlightedCode}</code></pre>
+                </div>`;
             },
             image(href, title, text) {
                 let src = href;
@@ -1886,7 +1971,106 @@
             }
         });
 
+
+        function runCodeInFullscreen(code, className) {
+            let htmlContent = '';
+            const isJS = className.includes('language-javascript') || className.includes('language-js');
+            const isCSS = className.includes('language-css');
+            const isSVG = className.includes('language-svg') || className.includes('language-xml');
+
+            if (isJS) {
+                htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <title>JS Execution</title>
+                        <style>
+                            body { font-family: sans-serif; padding: 20px; background-color: #fff; color: #000; }
+                        </style>
+                    </head>
+                    <body>
+                        <div id="console-output"></div>
+                        <script>
+                            // Simple console redirection to screen
+                            const output = document.getElementById('console-output');
+                            const log = console.log;
+                            console.log = (...args) => {
+                                log(...args);
+                                const div = document.createElement('div');
+                                div.textContent = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+                                output.appendChild(div);
+                            };
+                            try {
+                                ${code}
+                            } catch (err) {
+                                document.body.innerHTML = '<h3 style="color:red">Error during execution:</h3><pre>' + err.toString() + '</pre>';
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+            } else if (isCSS) {
+                htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <style>${code}</style>
+                    </head>
+                    <body>
+                        <p style="padding: 20px; font-family: sans-serif;">CSS Applied. Template elements:</p>
+                        <div style="padding: 20px;">
+                            <h1>Header h1</h1>
+                            <button>Button</button>
+                        </div>
+                    </body>
+                    </html>
+                `;
+            } else if (isSVG) {
+                htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="utf-8">
+                        <style>
+                            body { margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; background-color: #f0f2f5; }
+                            svg { max-width: 90%; max-height: 90%; }
+                        </style>
+                    </head>
+                    <body>
+                        ${code}
+                    </body>
+                    </html>
+                `;
+            } else {
+                htmlContent = code;
+            }
+
+            codeRunnerOverlay.classList.add('active');
+            const iframeDoc = codeRunnerFrame.contentDocument || codeRunnerFrame.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(htmlContent);
+            iframeDoc.close();
+        }
+
+
+        codeRunnerClose.addEventListener('click', () => {
+            codeRunnerOverlay.classList.remove('active');
+            codeRunnerFrame.src = 'about:blank';
+        });
+
         chatContainer.addEventListener('click', async (e) => {
+            const runCodeBtn = e.target.closest('.run-code-btn');
+            if (runCodeBtn) {
+                const wrapper = runCodeBtn.closest('.code-block-wrapper');
+                const codeElement = wrapper.querySelector('pre code');
+                if (codeElement) {
+                    runCodeInFullscreen(codeElement.innerText, codeElement.className);
+                }
+                return;
+            }
+
             const copyCodeBtn = e.target.closest('.copy-code-btn');
             if (copyCodeBtn) {
                 const wrapper = copyCodeBtn.closest('.code-block-wrapper');
@@ -1912,7 +2096,6 @@
                         const chat = await getChat(currentChatId);
                         const msgObj = chat?.messages.find(m => m.id === msgId);
                         const textToCopy = msgObj ? msgObj.displayText : messageEl.querySelector('.message-text')?.innerText;
-                        
                         await navigator.clipboard.writeText(textToCopy || '');
                         copyMsgBtn.classList.add('copied');
                         setTimeout(() => copyMsgBtn.classList.remove('copied'), 2000);
