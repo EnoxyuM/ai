@@ -525,6 +525,14 @@
             word-wrap: break-word;
         }
 
+
+        .message-timer {
+            font-size: 11px;
+            color: #80868b;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
         .input-area-wrapper {
             background-color: var(--bg-color);
             padding: 10px 20px 20px 20px;
@@ -1788,10 +1796,37 @@
             return title;
         }
 
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+
+        function clearAllTimers() {
+            document.querySelectorAll('.message-timer').forEach(el => el.remove());
+        }
+
         async function requestAIResponse(chatId, modelVal, aiMsgId, aiMessageElement, useWebSearch = false) {
+
+            let seconds = 0;
+            const timerEl = aiMessageElement.querySelector('.message-timer');
+            if (timerEl) {
+                timerEl.textContent = '00:00';
+            }
+            const timerInterval = setInterval(() => {
+                seconds++;
+                if (timerEl) {
+                    timerEl.textContent = formatTime(seconds);
+                }
+            }, 1000);
+
             try {
                 const activeKey = getActiveApiKey();
                 if (!activeKey) {
+                    clearInterval(timerInterval);
+                    if (timerEl) timerEl.remove();
                     aiMessageElement.querySelector('.message-text').textContent = 'Error: Please add and select a Gemini API key first.';
                     sendBtn.disabled = false;
                     return;
@@ -1848,6 +1883,8 @@
             } catch (error) {
                 aiMessageElement.querySelector('.message-text').textContent = `Network error: ${error.message}`;
             } finally {
+
+                clearInterval(timerInterval);
                 sendBtn.disabled = false;
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
@@ -1864,6 +1901,9 @@
                 alert('Please add and select a Gemini API key in the bottom right panel first.');
                 return;
             }
+
+
+            clearAllTimers();
 
             const userTextToShow = prompt;
             const userMsgId = Date.now().toString();
@@ -1925,7 +1965,8 @@
             sendBtn.disabled = true;
 
             const aiMsgId = (Date.now() + 1).toString();
-            const aiMessageElement = appendMessage('', 'Typing...', 'ai', aiMsgId);
+
+            const aiMessageElement = appendMessage('', '', 'ai', aiMsgId);
 
             await requestAIResponse(currentChatId, model, aiMsgId, aiMessageElement, isSearchEnabled);
         }
@@ -1987,6 +2028,7 @@
                 ${senderLabelHTML}
                 <div class="message-text">${contentHTML}</div>
                 ${attachmentsHTML}
+                ${type === 'ai' ? '<div class="message-timer"></div>' : ''}
             `;
             chatContainer.appendChild(msg);
             chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -2094,6 +2136,9 @@
             const clickIdx = chat.messages.findIndex(m => m.id === msgId);
             if (clickIdx === -1) return;
 
+
+            clearAllTimers();
+
             const clickedMsg = chat.messages[clickIdx];
             let targetUserMsg = null;
             let keepCount = 0;
@@ -2131,7 +2176,7 @@
             sendBtn.disabled = true;
 
             const aiMsgId = Date.now().toString();
-            const aiMessageElement = appendMessage('', 'Typing...', 'ai', aiMsgId);
+            const aiMessageElement = appendMessage('', '', 'ai', aiMsgId);
 
             await requestAIResponse(currentChatId, selectedModel, aiMsgId, aiMessageElement, isSearchEnabled);
         }
