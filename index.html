@@ -1949,7 +1949,13 @@
             }
         });
 
+
         function adjustInputHeight() {
+
+            if (!promptInput.value) {
+                promptInput.style.height = '24px';
+                return;
+            }
             promptInput.style.height = 'auto';
             const newHeight = promptInput.scrollHeight;
             promptInput.style.height = (newHeight < 24 ? 24 : newHeight) + 'px';
@@ -2313,6 +2319,7 @@
             renderAttachments();
             document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
             closeMobilePanels();
+            adjustInputHeight();
         }
 
         async function loadHistory() {
@@ -2372,6 +2379,7 @@
             });
             chatContainer.scrollTop = chatContainer.scrollHeight;
             closeMobilePanels();
+            adjustInputHeight();
         }
 
         async function deleteChat(chatId) {
@@ -2557,8 +2565,6 @@
         });
 
         async function initializeApp() {
-            adjustInputHeight();
-
             loadApisFromStorage();
             parseUrlKey();
             renderApiManager();
@@ -2591,6 +2597,7 @@
             }
 
             updateHeaderButtonHighlights();
+            adjustInputHeight();
         }
 
         initializeApp();
