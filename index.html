@@ -772,6 +772,57 @@
             color: #a8c7fa;
         }
 
+        /* Наложенный контейнер для воспроизведения видео */
+        .video-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(19, 19, 20, 0.95);
+            z-index: 500;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        .video-overlay.active {
+            display: flex;
+        }
+
+        .video-overlay-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .video-overlay-content video {
+            max-width: 100%;
+            max-height: 65vh;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border: 1px solid #3c4043;
+            outline: none;
+        }
+
+        .overlay-link {
+            color: var(--accent-color);
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: color 0.2s;
+        }
+
+        .overlay-link:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
         .attachments-preview {
             display: flex;
             flex-wrap: wrap;
@@ -1073,6 +1124,14 @@
 
         <!-- Центральный диалог (Занимает всё оставшееся пространство без сжатия) -->
         <div class="main-content">
+            <!-- Видео-наложение по центру экрана -->
+            <div class="video-overlay" id="videoOverlay">
+                <div class="video-overlay-content">
+                    <video id="overlayVideo" src="/gifs/gem.mp4" loop muted playsinline></video>
+                    <a href="https://aistudio.google.com/app/api-keys" target="_blank" class="overlay-link">Get API here: https://aistudio.google.com/app/api-keys</a>
+                </div>
+            </div>
+
             <div class="chat-container" id="chatContainer"></div>
 
             <div class="input-area-wrapper">
@@ -1166,6 +1225,10 @@
         const apiDropdownMenu = document.getElementById('apiDropdownMenu');
         const addGeminiBtn = document.getElementById('addGeminiBtn');
 
+        // Элементы наложения видео
+        const videoOverlay = document.getElementById('videoOverlay');
+        const overlayVideo = document.getElementById('overlayVideo');
+
         let attachedFiles = [];
         let dragCounter = 0;
         let currentChatId = null;
@@ -1175,6 +1238,10 @@
         let savedApis = [];
         let selectedApiId = null;
         let editingApiId = null;
+
+        // Флаги управления воспроизведением видео
+        let isGeminiBtnHovered = false;
+        let isApiFieldFocused = false;
 
         const DB_NAME = 'aichats';
         const DB_VERSION = 1;
@@ -1300,6 +1367,22 @@
             renderApiManager();
         }
 
+        // Обновление состояния видео-наложения по флагам
+        function syncVideoOverlay() {
+            if (isGeminiBtnHovered || isApiFieldFocused) {
+                if (!videoOverlay.classList.contains('active')) {
+                    videoOverlay.classList.add('active');
+                    overlayVideo.play().catch(() => {});
+                }
+            } else {
+                if (videoOverlay.classList.contains('active')) {
+                    videoOverlay.classList.remove('active');
+                    overlayVideo.pause();
+                    overlayVideo.currentTime = 0;
+                }
+            }
+        }
+
         function renderApiManager(showForm = false, prefillName = '', prefillKey = '') {
             apiList.innerHTML = '';
 
@@ -1319,9 +1402,22 @@
                     <button class="api-submit-btn" id="apiFormSubmit">${editingApiId ? 'Save' : 'Add'}</button>
                 `;
 
+                const formKeyInput = form.querySelector('#apiFormKey');
+
+                // Мониторинг фокуса на поле ключа API
+                formKeyInput.addEventListener('focus', () => {
+                    isApiFieldFocused = true;
+                    syncVideoOverlay();
+                });
+
+                formKeyInput.addEventListener('blur', () => {
+                    isApiFieldFocused = false;
+                    syncVideoOverlay();
+                });
+
                 const submitBtn = form.querySelector('#apiFormSubmit');
                 submitBtn.addEventListener('click', () => {
-                    const keyVal = form.querySelector('#apiFormKey').value.trim();
+                    const keyVal = formKeyInput.value.trim();
                     let nameVal = form.querySelector('#apiFormName').value.trim();
 
                     if (!keyVal) return;
@@ -1352,6 +1448,9 @@
                         });
                         selectedApiId = newId;
                     }
+
+                    isApiFieldFocused = false;
+                    syncVideoOverlay();
 
                     saveApisToStorage();
                     renderApiManager();
@@ -1449,6 +1548,17 @@
             apiDropdownMenu.classList.remove('show');
             editingApiId = null;
             renderApiManager(true);
+        });
+
+        // Мониторинг наведения мыши на кнопку Gemini в меню Add API
+        addGeminiBtn.addEventListener('mouseenter', () => {
+            isGeminiBtnHovered = true;
+            syncVideoOverlay();
+        });
+
+        addGeminiBtn.addEventListener('mouseleave', () => {
+            isGeminiBtnHovered = false;
+            syncVideoOverlay();
         });
 
         function getActiveApiKey() {
