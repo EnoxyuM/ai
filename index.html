@@ -67,11 +67,8 @@
             position: relative;
         }
 
+        /* Левая панель */
         .sidebar {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
             width: 260px;
             background-color: var(--bg-color);
             border-right: 1px solid #2d2f31;
@@ -105,14 +102,13 @@
             border-color: var(--accent-color);
         }
 
-        .history-title {
-            padding: 0 20px;
+        .history-title, .right-panel-title {
+            padding: 16px 20px 8px 20px;
             font-size: 11px;
             color: #80868b;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             font-weight: bold;
-            margin-bottom: 8px;
         }
 
         .history-list {
@@ -252,15 +248,14 @@
             opacity: 1;
         }
 
+        /* Центральная область */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             height: 100%;
-            width: 100%;
             overflow: hidden;
             position: relative;
-            padding-right: 280px; /* Отступ под правую панель */
         }
 
         .chat-container {
@@ -508,47 +503,33 @@
 
         /* Правая боковая панель */
         .right-panel {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            bottom: 20px;
-            width: 240px;
+            width: 260px;
+            background-color: var(--bg-color);
+            border-left: 1px solid #2d2f31;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            z-index: 1000;
+            height: 100%;
+            flex-shrink: 0;
+            z-index: 100;
+            user-select: none;
         }
 
         .model-selector-container {
             flex: 2;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 2px;
             overflow-y: auto;
-            padding-right: 4px;
+            padding: 0 8px;
         }
 
         /* Менеджер API занимает 1/3 высоты */
         .api-manager-container {
             height: 33%;
-            min-height: 220px;
-            background-color: var(--chat-bg);
-            border: 1px solid #3c4043;
-            border-radius: 12px;
-            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            overflow: hidden;
-        }
-
-        .api-manager-header {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--accent-color);
-            border-bottom: 1px solid #2d2f31;
-            padding-bottom: 6px;
+            border-top: 1px solid #2d2f31;
+            padding-bottom: 16px;
         }
 
         .api-list {
@@ -556,7 +537,8 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 2px;
+            padding: 0 8px;
         }
 
         .api-group-title {
@@ -564,53 +546,64 @@
             color: #80868b;
             text-transform: uppercase;
             font-weight: bold;
-            margin-top: 4px;
+            margin: 8px 12px 4px 12px;
         }
 
         .api-item {
             display: flex;
             align-items: center;
-            gap: 4px;
-            background-color: #282a2d;
-            border: 1px solid #3c4043;
+            justify-content: space-between;
+            padding: 8px 12px;
             border-radius: 8px;
-            padding: 4px 8px;
+            cursor: pointer;
+            color: #c4c7c5;
+            font-size: 13.5px;
+            transition: all 0.2s;
+            position: relative;
+            min-height: 38px;
+        }
+
+        .api-item:hover {
+            background-color: #2a2b2d;
+            color: #fff;
         }
 
         .api-item.active {
-            border-color: var(--accent-color);
-            background-color: rgba(168, 199, 250, 0.1);
+            background-color: #2d2f31;
+            color: var(--accent-color);
+            font-weight: 500;
         }
 
         .api-item-btn {
             flex: 1;
             background: none;
             border: none;
-            color: var(--text-color);
+            color: inherit;
             text-align: left;
-            font-size: 12.5px;
+            font-size: 13.5px;
             cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-weight: inherit;
         }
 
-        .api-item.active .api-item-btn {
-            color: var(--accent-color);
-            font-weight: 500;
-        }
-
+        /* Иконки действий на API появляются только при наведении */
         .api-action-btn {
             background: none;
             border: none;
             color: #80868b;
             cursor: pointer;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             padding: 4px;
             border-radius: 4px;
             transition: all 0.2s;
+        }
+
+        .api-item:hover .api-action-btn {
+            display: flex;
         }
 
         .api-action-btn:hover {
@@ -630,7 +623,8 @@
             background-color: #282a2d;
             border: 1px solid #3c4043;
             border-radius: 8px;
-            padding: 8px;
+            padding: 10px;
+            margin: 4px 8px;
         }
 
         .api-input {
@@ -638,7 +632,7 @@
             background-color: var(--bg-color);
             border: 1px solid #3c4043;
             color: var(--text-color);
-            padding: 6px 8px;
+            padding: 6px 10px;
             border-radius: 6px;
             font-size: 12px;
             outline: none;
@@ -648,7 +642,6 @@
             border-color: var(--accent-color);
         }
 
-        /* Анимация пульсации для выделенного незаполненного поля */
         .api-input.pulse-highlight {
             animation: pulseGlow 1.5s infinite ease-in-out;
         }
@@ -680,36 +673,39 @@
         }
 
         .api-add-container {
+            padding: 8px 16px;
             position: relative;
         }
 
+        /* Кнопка добавления API идентична New Chat */
         .api-add-trigger-btn {
             width: 100%;
+            padding: 10px 16px;
             background-color: #282a2d;
-            border: 1px dashed #3c4043;
+            border: 1px solid #3c4043;
             color: var(--text-color);
-            padding: 6px;
-            border-radius: 8px;
-            font-size: 12px;
+            border-radius: 20px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             transition: all 0.2s;
         }
 
         .api-add-trigger-btn:hover {
-            border-color: var(--accent-color);
             background-color: #3c4043;
+            border-color: var(--accent-color);
         }
 
         .api-dropdown-menu {
             display: none;
             position: absolute;
             bottom: 110%;
-            left: 0;
-            right: 0;
+            left: 16px;
+            right: 16px;
             background-color: #202124;
             border: 1px solid #3c4043;
             border-radius: 8px;
@@ -737,38 +733,39 @@
             background-color: #2d2f31;
         }
 
+        /* Выбор модели идентичен истории */
         .model-option {
-            background-color: var(--chat-bg);
-            border: 1px solid #3c4043;
-            color: var(--text-color);
-            padding: 10px 14px;
-            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            padding: 8px 12px;
+            border-radius: 8px;
             cursor: pointer;
+            color: #c4c7c5;
+            font-size: 13.5px;
             transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            user-select: none;
+            position: relative;
         }
 
         .model-option:hover {
-            border-color: #80868b;
-            background-color: #242526;
+            background-color: #2a2b2d;
+            color: #fff;
         }
 
         .model-option.active {
-            border-color: var(--accent-color);
-            background-color: rgba(168, 199, 250, 0.15);
-            box-shadow: 0 0 6px rgba(168, 199, 250, 0.4);
+            background-color: #2d2f31;
+            color: var(--accent-color);
+            font-weight: 500;
         }
 
         .model-option-name {
             font-size: 13.5px;
-            font-weight: 600;
+            font-weight: inherit;
         }
 
         .model-option-info {
             font-size: 11px;
             color: #80868b;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .model-option.active .model-option-info {
@@ -1054,6 +1051,7 @@
 
     <div class="app-container">
 
+        <!-- Левая панель -->
         <div class="sidebar">
             <button class="new-chat-btn" id="newChatBtn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1073,43 +1071,8 @@
             </div>
         </div>
 
+        <!-- Центральный диалог (Занимает всё оставшееся пространство без сжатия) -->
         <div class="main-content">
-            <div class="right-panel">
-                <div class="model-selector-container" id="modelSelectContainer">
-                    <div class="model-option" data-value="gemini-3.5-flash">
-                        <div class="model-option-name">Gemini 3.5 Flash</div>
-                        <div class="model-option-info">20 | Best for coding</div>
-                    </div>
-                    <div class="model-option" data-value="gemini-3.1-flash-lite-preview">
-                        <div class="model-option-name">Gemini 3.1 Flash Lite</div>
-                        <div class="model-option-info">500 | Very fast</div>
-                    </div>
-                    <div class="model-option" data-value="gemini-3-flash-preview">
-                        <div class="model-option-name">Gemini 3 Flash</div>
-                        <div class="model-option-info">20 | idk</div>
-                    </div>
-                    <div class="model-option" data-value="gemini-2.5-flash">
-                        <div class="model-option-name">Gemini 2.5 Flash</div>
-                        <div class="model-option-info">20 | idk</div>
-                    </div>
-                    <div class="model-option" data-value="gemma-4-31b-it">
-                        <div class="model-option-name">Gemma 4 31B</div>
-                        <div class="model-option-info">1500 | Very slow</div>
-                    </div>
-                </div>
-
-                <div class="api-manager-container">
-                    <div class="api-manager-header">API Manager</div>
-                    <div class="api-list" id="apiList"></div>
-                    <div class="api-add-container">
-                        <button class="api-add-trigger-btn" id="apiAddTriggerBtn">+ Add API</button>
-                        <div class="api-dropdown-menu" id="apiDropdownMenu">
-                            <button class="api-menu-item" id="addGeminiBtn">Gemini</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="chat-container" id="chatContainer"></div>
 
             <div class="input-area-wrapper">
@@ -1133,6 +1096,52 @@
                 </div>
             </div>
         </div>
+
+        <!-- Правая панель -->
+        <div class="right-panel">
+            <div class="right-panel-title">Models</div>
+            <div class="model-selector-container" id="modelSelectContainer">
+                <div class="model-option" data-value="gemini-3.5-flash">
+                    <div class="model-option-name">Gemini 3.5 Flash</div>
+                    <div class="model-option-info">20 | Best for coding</div>
+                </div>
+                <div class="model-option" data-value="gemini-3.1-flash-lite-preview">
+                    <div class="model-option-name">Gemini 3.1 Flash Lite</div>
+                    <div class="model-option-info">500 | Very fast</div>
+                </div>
+                <div class="model-option" data-value="gemini-3-flash-preview">
+                    <div class="model-option-name">Gemini 3 Flash</div>
+                    <div class="model-option-info">20 | idk</div>
+                </div>
+                <div class="model-option" data-value="gemini-2.5-flash">
+                    <div class="model-option-name">Gemini 2.5 Flash</div>
+                    <div class="model-option-info">20 | idk</div>
+                </div>
+                <div class="model-option" data-value="gemma-4-31b-it">
+                    <div class="model-option-name">Gemma 4 31B</div>
+                    <div class="model-option-info">1500 | Very slow</div>
+                </div>
+            </div>
+
+            <!-- Раздел API Keys (по образу и подобию левого сайдбара) -->
+            <div class="api-manager-container">
+                <div class="right-panel-title">API Keys</div>
+                <div class="api-list" id="apiList"></div>
+                <div class="api-add-container">
+                    <button class="api-add-trigger-btn" id="apiAddTriggerBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add API
+                    </button>
+                    <div class="api-dropdown-menu" id="apiDropdownMenu">
+                        <button class="api-menu-item" id="addGeminiBtn">Gemini</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
