@@ -1087,7 +1087,7 @@
             margin: auto;
         }
 
-        /* Шапка мобильного интерфейса */
+
         .mobile-header {
             display: none;
             align-items: center;
@@ -1100,29 +1100,27 @@
             z-index: 120;
         }
 
-        .mobile-header-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-color);
-        }
 
         .mobile-header-btn {
-            background: none;
-            border: none;
-            color: #80868b;
+            background-color: #282a2d;
+            border: 1px solid #3c4043;
+            color: var(--text-color);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 18px;
+            height: 36px;
+            width: 110px;
             transition: all 0.2s;
         }
 
         .mobile-header-btn:hover, .mobile-header-btn:active {
             color: var(--text-color);
-            background-color: #2a2b2d;
+            background-color: #3c4043;
+            border-color: var(--accent-color);
         }
 
         .mobile-overlay {
@@ -1137,26 +1135,26 @@
             backdrop-filter: blur(2px);
         }
 
-        /* Адаптивные правила для мобильных устройств */
+
         @media (max-width: 768px) {
             .app-container {
-                flex-direction: column; /* Вертикальный стек */
+                flex-direction: column;
             }
 
             .mobile-header {
                 display: flex;
-                order: 1; /* Всегда первый элемент */
+                order: 1;
             }
 
-            /* Панель моделей и API сверху (1/3 экрана) */
+
             .right-panel {
-                order: 2; /* Расположен вторым, прямо под шапкой */
+                order: 2;
                 width: 100% !important;
-                height: 33.33vh !important; /* Ровно треть высоты viewport */
+                height: 33.33vh !important;
                 border-left: none;
                 border-bottom: 1px solid #2d2f31;
                 display: flex !important;
-                flex-direction: row !important; /* Разделен на лево и право */
+                flex-direction: row !important;
                 transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s, border-bottom 0.3s;
                 opacity: 1;
                 pointer-events: auto;
@@ -1164,7 +1162,7 @@
                 background-color: var(--bg-color);
             }
 
-            /* Класс скрытия панели сверху */
+
             .right-panel.closed {
                 height: 0 !important;
                 border-bottom: none !important;
@@ -1172,7 +1170,7 @@
                 pointer-events: none !important;
             }
 
-            /* Колонки внутри верхней панели */
+
             .model-selector-container, .api-manager-container {
                 flex: 1 !important;
                 height: 100% !important;
@@ -1185,9 +1183,9 @@
                 padding-bottom: 8px !important;
             }
 
-            /* Диалоги и поле ввода снизу (2/3 экрана) */
+
             .main-content {
-                order: 3; /* Нижняя секция */
+                order: 3;
                 flex: 1;
                 display: flex;
                 flex-direction: column;
@@ -1196,20 +1194,20 @@
                 position: relative;
             }
 
-            /* Боковая панель истории выезжает СПРАВА */
+
             .sidebar {
                 position: fixed;
-                right: 0;
-                left: auto;
+                left: 0;
+                right: auto;
                 top: 0;
                 bottom: 0;
                 width: 280px;
-                transform: translateX(100%);
+                transform: translateX(-100%);
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: -4px 0 15px rgba(0,0,0,0.5);
+                box-shadow: 4px 0 15px rgba(0,0,0,0.5);
                 z-index: 1000;
-                border-right: none;
-                border-left: 1px solid #2d2f31;
+                border-left: none;
+                border-right: 1px solid #2d2f31;
             }
 
             .sidebar.open {
@@ -1220,7 +1218,7 @@
                 display: block;
             }
 
-            /* Позиционирование гифки в нижней секции 2/3, чтобы она не перекрывала ввод API */
+
             .gif-overlay {
                 position: absolute;
                 top: 0;
@@ -1228,7 +1226,7 @@
                 left: 0;
                 right: 0;
                 height: 100%;
-                z-index: 45; /* ниже верхней панели */
+                z-index: 45;
             }
 
             .gif-element {
@@ -1243,7 +1241,7 @@
                 padding: 0 12px;
             }
 
-            /* Оптимизация размеров для мобильных списков */
+
             .right-panel .right-panel-title {
                 padding: 8px 12px;
                 font-size: 10px;
@@ -1334,22 +1332,10 @@
 
     <div class="app-container">
 
-        <!-- Шапка: видна на мобилках всегда. Кнопка истории СЛЕВА, кнопка настроек СПРАВА -->
+
         <div class="mobile-header">
-            <button class="mobile-header-btn" id="mobileMenuBtn" title="History">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-            <div class="mobile-header-title">Ai Chat</div>
-            <button class="mobile-header-btn" id="mobileSettingsBtn" title="Models & Keys">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-            </button>
+            <button class="mobile-header-btn" id="mobileSettingsBtn">Models/API</button>
+            <button class="mobile-header-btn" id="mobileMenuBtn">Chats</button>
         </div>
 
 
@@ -1405,7 +1391,7 @@
         </div>
 
 
-        <!-- Верхняя панель (1/3 экрана по умолчанию) -->
+
         <div class="right-panel">
             <div class="model-selector-container" id="modelSelectContainer">
                 <div class="right-panel-title">Models</div>
@@ -1475,7 +1461,7 @@
         const addGeminiBtn = document.getElementById('addGeminiBtn');
         const gifOverlay = document.getElementById('gifOverlay');
 
-        // Элементы управления для мобильных устройств
+
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
         const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
         const mobileOverlay = document.getElementById('mobileOverlay');
@@ -1714,7 +1700,7 @@
                         </button>
                         <button class="api-action-btn edit" title="Edit API">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                         </button>
@@ -2463,7 +2449,7 @@
             await restoreChat(newChatId);
         }
 
-        // Кнопки управления шапкой
+
         mobileMenuBtn.addEventListener('click', () => {
             sidebar.classList.toggle('open');
             if (sidebar.classList.contains('open')) {
