@@ -1906,10 +1906,14 @@
             const copyMsgBtn = e.target.closest('.message-copy-btn');
             if (copyMsgBtn) {
                 const messageEl = copyMsgBtn.closest('.message');
-                const textNode = messageEl.querySelector('.message-text');
-                if (textNode) {
+                const msgId = messageEl.getAttribute('data-id');
+                if (msgId && currentChatId) {
                     try {
-                        await navigator.clipboard.writeText(textNode.innerText);
+                        const chat = await getChat(currentChatId);
+                        const msgObj = chat?.messages.find(m => m.id === msgId);
+                        const textToCopy = msgObj ? msgObj.displayText : messageEl.querySelector('.message-text')?.innerText;
+                        
+                        await navigator.clipboard.writeText(textToCopy || '');
                         copyMsgBtn.classList.add('copied');
                         setTimeout(() => copyMsgBtn.classList.remove('copied'), 2000);
                     } catch (err) {
