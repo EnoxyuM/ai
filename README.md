@@ -3,6 +3,7 @@
 <img width="1920" height="1078" alt="image" src="https://github.com/user-attachments/assets/239d83eb-7459-4033-a19b-16e821dadb19" />
 ### New:
 * **Added button to play HTML/js code**
+* **You can now add as many System prompts as you want**
 ### Features
 * **Easy GIF tutorial how to get API KEY:** You can add as many API as you want (Gemini only currently).
 * **Local Storage:** All your chat history is saved locally in your browser.
