@@ -2,6 +2,8 @@
 [CLICK TO USE](https://enoxyum.github.io/ai/)
 <img width="1920" height="1078" alt="image" src="https://github.com/user-attachments/assets/239d83eb-7459-4033-a19b-16e821dadb19" />
 ### New:
+* **Added Stop button & Dialog navigation QoL**
+* **Added Thinking process and fixed timeout of long AI answer**
 * **Added button to play HTML/js code**
 * **You can now add as many System prompts as you want**
 ### Features
