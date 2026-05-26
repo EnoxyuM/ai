@@ -1354,6 +1354,38 @@
         }
 
 
+        .thinking-details {
+            background-color: #1e1f20;
+            border: 1px solid #3c4043;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .thinking-summary {
+            font-weight: 500;
+            color: #80868b;
+            cursor: pointer;
+            user-select: none;
+            outline: none;
+            display: list-item;
+        }
+
+        .thinking-summary:hover {
+            color: var(--accent-color);
+        }
+
+        .thinking-content {
+            margin-top: 10px;
+            color: #c4c7c5;
+            border-top: 1px dashed #3c4043;
+            padding-top: 10px;
+            line-height: 1.6;
+        }
+
+
         @media (max-width: 768px) {
             .app-container {
                 flex-direction: column;
@@ -2465,7 +2497,7 @@
                     try {
                         const chat = await getChat(currentChatId);
                         const msgObj = chat?.messages.find(m => m.id === msgId);
-                        const textToCopy = msgObj ? msgObj.displayText : messageEl.querySelector('.message-text')?.innerText;
+                        const textToCopy = msgObj ? msgObj.displayText : messageEl.querySelector('.answer-content')?.innerText;
                         await navigator.clipboard.writeText(textToCopy || '');
                         copyMsgBtn.classList.add('copied');
                         setTimeout(() => copyMsgBtn.classList.remove('copied'), 2000);
@@ -2682,37 +2714,144 @@
                     })
                 });
 
-                const data = await response.json();
                 const textNode = aiMessageElement.querySelector('.message-text');
 
-                if (response.ok) {
-                    let cleanText = (data.text || '').replace(/\n{3,}/g, '\n\n');
-                    textNode.innerHTML = marked.parse(cleanText || 'Received empty response.');
-
-                    textNode.querySelectorAll('p').forEach(p => {
-                        if (!p.textContent.trim()) {
-                            p.remove();
+                if (!response.ok) {
+                    clearInterval(timerInterval);
+                    if (timerEl) timerEl.remove();
+                    let errorMessage = "Failed to get response.";
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
+                        const data = await response.json();
+                        errorMessage = data.error || errorMessage;
+                    } else {
+                        const rawText = await response.text().catch(() => "");
+                        if (rawText.includes("error code: 524")) {
+                            errorMessage = "Cloudflare Timeout (524). The server took too long to respond.";
+                        } else {
+                            errorMessage = `Server Error (${response.status}): ${response.statusText || 'Unknown Connection Issue'}`;
                         }
-                    });
-
-                    const aiReplyText = data.text || '';
-                    const aiMsgObj = {
-                        id: aiMsgId,
-                        role: 'model',
-                        parts: [{ text: aiReplyText }],
-                        displayText: aiReplyText
-                    };
-
-                    const updatedChat = await getChat(chatId);
-                    if (updatedChat) {
-                        updatedChat.messages.push(aiMsgObj);
-                        await saveChat(updatedChat);
                     }
-                } else {
-                    textNode.textContent = `Error: ${data.error || 'Failed to get response.'}`;
+                    textNode.textContent = `Error: ${errorMessage}`;
+                    sendBtn.disabled = false;
+                    return;
                 }
+
+
+                textNode.innerHTML = `
+                    <details class="thinking-details" style="display: none;" open>
+                        <summary class="thinking-summary">Thinking</summary>
+                        <div class="thinking-content"></div>
+                    </details>
+                    <div class="answer-content"></div>
+                `;
+
+                const thinkingDetails = textNode.querySelector('.thinking-details');
+                const thinkingWrapper = textNode.querySelector('.thinking-content');
+                const answerWrapper = textNode.querySelector('.answer-content');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let accumulatedAnswer = "";
+                let accumulatedThought = "";
+                let buffer = "";
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith("data:")) {
+                            const jsonStr = trimmed.substring(5).trim();
+                            if (jsonStr) {
+                                try {
+                                    const parsed = JSON.parse(jsonStr);
+                                    const part = parsed.candidates?.[0]?.content?.parts?.[0];
+                                    const textChunk = part?.text || "";
+                                    const isThought = part?.thought === true;
+
+                                    if (textChunk) {
+                                        if (isThought) {
+                                            accumulatedThought += textChunk;
+                                            thinkingDetails.style.display = 'block';
+                                            thinkingWrapper.innerHTML = marked.parse(accumulatedThought.replace(/\n{3,}/g, '\n\n'));
+                                        } else {
+                                            accumulatedAnswer += textChunk;
+                                            answerWrapper.innerHTML = marked.parse(accumulatedAnswer.replace(/\n{3,}/g, '\n\n'));
+                                        }
+
+                                        textNode.querySelectorAll('p').forEach(p => {
+                                            if (!p.textContent.trim() && !p.innerHTML.trim()) {
+                                                p.remove();
+                                            }
+                                        });
+                                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                                    }
+                                } catch (e) {
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (buffer) {
+                    const trimmed = buffer.trim();
+                    if (trimmed.startsWith("data:")) {
+                        const jsonStr = trimmed.substring(5).trim();
+                        if (jsonStr) {
+                            try {
+                                const parsed = JSON.parse(jsonStr);
+                                const part = parsed.candidates?.[0]?.content?.parts?.[0];
+                                const textChunk = part?.text || "";
+                                const isThought = part?.thought === true;
+
+                                if (textChunk) {
+                                    if (isThought) {
+                                        accumulatedThought += textChunk;
+                                        thinkingDetails.style.display = 'block';
+                                        thinkingWrapper.innerHTML = marked.parse(accumulatedThought.replace(/\n{3,}/g, '\n\n'));
+                                    } else {
+                                        accumulatedAnswer += textChunk;
+                                        answerWrapper.innerHTML = marked.parse(accumulatedAnswer.replace(/\n{3,}/g, '\n\n'));
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+
+                if (thinkingDetails && accumulatedThought) {
+                    thinkingDetails.removeAttribute('open');
+                }
+
+                if (!accumulatedAnswer) {
+                    answerWrapper.textContent = 'Received empty response.';
+                    accumulatedAnswer = 'Received empty response.';
+                }
+
+
+                const aiMsgObj = {
+                    id: aiMsgId,
+                    role: 'model',
+                    parts: [{ text: accumulatedAnswer }],
+                    displayText: accumulatedAnswer,
+                    thoughtText: accumulatedThought
+                };
+
+                const updatedChat = await getChat(chatId);
+                if (updatedChat) {
+                    updatedChat.messages.push(aiMsgObj);
+                    await saveChat(updatedChat);
+                }
+
             } catch (error) {
-                aiMessageElement.querySelector('.message-text').textContent = `Network error: ${error.message}`;
+                textNode.innerHTML = `<div class="answer-content">Network error: ${error.message}</div>`;
             } finally {
                 clearInterval(timerInterval);
                 sendBtn.disabled = false;
@@ -2800,13 +2939,28 @@
             await requestAIResponse(currentChatId, model, aiMsgId, aiMessageElement, isSearchEnabled);
         }
 
-        function appendMessage(sender, text, type, msgId, parts = []) {
+        function appendMessage(sender, text, type, msgId, parts = [], thoughtText = "") {
             const msg = document.createElement('div');
             msg.className = `message ${type}`;
             msg.setAttribute('data-id', msgId);
 
             const isUser = type === 'user';
-            const contentHTML = isUser ? escapeHTML(text) : text;
+
+            let contentHTML = "";
+            if (isUser) {
+                contentHTML = `<div class="message-text">${escapeHTML(text)}</div>`;
+            } else {
+
+                const thoughtsHTML = thoughtText ? `
+                    <details class="thinking-details">
+                        <summary class="thinking-summary">Thinking</summary>
+                        <div class="thinking-content">${marked.parse(thoughtText)}</div>
+                    </details>
+                ` : '';
+                const answerHTML = `<div class="answer-content">${text}</div>`;
+                contentHTML = `<div class="message-text">${thoughtsHTML}${answerHTML}</div>`;
+            }
+
             const senderLabelHTML = isUser ? `<span class="message-sender">${sender}</span>` : '';
 
             let attachmentsHTML = '';
@@ -2855,7 +3009,7 @@
                     </button>
                 </div>
                 ${senderLabelHTML}
-                <div class="message-text">${contentHTML}</div>
+                ${contentHTML}
                 ${attachmentsHTML}
                 ${type === 'ai' ? '<div class="message-timer"></div>' : ''}
             `;
@@ -2927,7 +3081,7 @@
                 const senderText = isUser ? 'User' : 'Model';
                 const typeText = isUser ? 'user' : 'ai';
                 const renderedContent = isUser ? msg.displayText : marked.parse(msg.displayText || '');
-                appendMessage(senderText, renderedContent, typeText, msg.id, msg.parts);
+                appendMessage(senderText, renderedContent, typeText, msg.id, msg.parts, msg.thoughtText || "");
             });
 
             document.querySelectorAll('.history-item').forEach(item => {
@@ -3004,7 +3158,7 @@
                 const senderText = isUser ? 'User' : 'Model';
                 const typeText = isUser ? 'user' : 'ai';
                 const renderedContent = isUser ? msg.displayText : marked.parse(msg.displayText || '');
-                appendMessage(senderText, renderedContent, typeText, msg.id, msg.parts);
+                appendMessage(senderText, renderedContent, typeText, msg.id, msg.parts, msg.thoughtText || "");
             });
 
             sendBtn.disabled = true;
@@ -3045,7 +3199,6 @@
             await restoreChat(newChatId);
         }
 
-
         function updateHeaderButtonHighlights() {
 
             if (sidebar.classList.contains('open')) {
@@ -3068,7 +3221,6 @@
                 mobileSysPromptBtn.classList.remove('active');
             }
         }
-
 
         function setRightPanelClosedState(isClosed) {
 
@@ -3189,7 +3341,6 @@
             updateHeaderButtonHighlights();
             adjustInputHeight();
         }
-
         initializeApp();
     </script>
 </body>
