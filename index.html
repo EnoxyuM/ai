@@ -1642,20 +1642,19 @@
 
     <div class="code-runner-overlay" id="codeRunnerOverlay">
         <button class="code-runner-close" id="codeRunnerClose" title="Exit Fullscreen">&times;</button>
-        <iframe id="codeRunnerFrame" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+
+        <iframe id="codeRunnerFrame" sandbox="allow-scripts allow-modals allow-same-origin allow-pointer-lock"></iframe>
     </div>
 
     <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <div class="app-container">
 
-
         <div class="mobile-header">
             <button class="mobile-header-btn" id="mobileSettingsBtn">Models/API</button>
             <button class="mobile-header-btn" id="mobileSysPromptBtn">Sys Prompt</button>
             <button class="mobile-header-btn" id="mobileMenuBtn">Chats</button>
         </div>
-
 
         <div class="sidebar">
             <button class="new-chat-btn" id="newChatBtn">
@@ -1675,8 +1674,6 @@
                 </div>
             </div>
         </div>
-
-
         <div class="main-content">
 
             <div class="scroll-nav-container">
@@ -1712,8 +1709,6 @@
                 </div>
             </div>
         </div>
-
-
 
         <div class="right-panel">
             <div class="model-selector-container" id="modelSelectContainer">
@@ -1777,7 +1772,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -1913,7 +1907,6 @@
                 request.onerror = (e) => reject(e);
             });
         }
-
 
         function getAllPromptsFromDB() {
             return new Promise((resolve, reject) => {
