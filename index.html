@@ -319,6 +319,7 @@
             width: 100%;
             margin: 0 auto;
             padding-bottom: 10px;
+            scroll-behavior: auto;
         }
 
         .message {
@@ -1135,7 +1136,7 @@
             justify-content: center;
             cursor: pointer;
             font-size: 14px;
-            transition: opacity 0.2s, background-color 0.2s;
+            transition: opacity 0.2s, background-color 0.2s, color 0.2s;
         }
 
         .send-btn:hover {
@@ -1386,6 +1387,43 @@
         }
 
 
+        .scroll-nav-container {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 150;
+            pointer-events: none;
+        }
+
+        .scroll-nav-btn {
+            pointer-events: auto;
+            background-color: rgba(30, 31, 32, 0.85);
+            border: 1px solid #3c4043;
+            color: #80868b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            backdrop-filter: blur(2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            user-select: none;
+        }
+
+        .scroll-nav-btn:hover {
+            color: #fff;
+            background-color: #2a2b2d;
+            border-color: var(--accent-color);
+        }
+
+
         @media (max-width: 768px) {
             .app-container {
                 flex-direction: column;
@@ -1394,6 +1432,10 @@
             .mobile-header {
                 display: flex;
                 order: 1;
+            }
+
+            .scroll-nav-container {
+                display: none !important;
             }
 
 
@@ -1637,6 +1679,11 @@
 
         <div class="main-content">
 
+            <div class="scroll-nav-container">
+                <button class="scroll-nav-btn" id="scrollUpBtn" title="Scroll Up to Message">▲</button>
+                <button class="scroll-nav-btn" id="scrollDownBtn" title="Scroll Down to Message">▼</button>
+            </div>
+
             <div class="gif-overlay" id="gifOverlay">
                 <img class="gif-element" src="gifs/gem.gif" alt="Gemini Guide">
                 <a href="https://aistudio.google.com/app/api-keys" target="_blank" rel="noopener noreferrer" class="gif-link">Get API here: https://aistudio.google.com/app/api-keys</a>
@@ -1677,11 +1724,11 @@
                 </div>
                 <div class="model-option" data-value="gemini-3.1-flash-lite-preview">
                     <div class="model-option-name">Gemini 3.1 Flash Lite</div>
-                    <div class="model-option-info">500 | Very fast</div>
+                    <div class="model-option-info">500 | Removed?</div>
                 </div>
                 <div class="model-option" data-value="gemini-3-flash-preview">
                     <div class="model-option-name">Gemini 3 Flash</div>
-                    <div class="model-option-info">20 | idk</div>
+                    <div class="model-option-info">20 | Medium thinking</div>
                 </div>
                 <div class="model-option" data-value="gemini-2.5-flash">
                     <div class="model-option-name">Gemini 2.5 Flash</div>
@@ -1771,6 +1818,9 @@
         const spAddTriggerBtn = document.getElementById('spAddTriggerBtn');
         const systemPromptToggle = document.getElementById('systemPromptToggle');
 
+        const scrollUpBtn = document.getElementById('scrollUpBtn');
+        const scrollDownBtn = document.getElementById('scrollDownBtn');
+
         let attachedFiles = [];
         let dragCounter = 0;
         let currentChatId = null;
@@ -1789,6 +1839,9 @@
 
         let isGeminiHovered = false;
         let isApiFormActive = false;
+
+        let currentAbortController = null;
+        let isGenerating = false;
 
         const DB_NAME = 'aichats';
         const DB_VERSION = 2;
@@ -2669,6 +2722,32 @@
             document.querySelectorAll('.message-timer').forEach(el => el.remove());
         }
 
+        function isUserAtBottom() {
+            const threshold = 150;
+            return (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight) <= threshold;
+        }
+
+        function setGeneratingState(generating) {
+            isGenerating = generating;
+            if (generating) {
+                sendBtn.innerHTML = '■';
+                sendBtn.title = 'Stop generation';
+                sendBtn.style.backgroundColor = '#ff6b6b';
+                sendBtn.style.color = '#131314';
+            } else {
+                sendBtn.innerHTML = '▶';
+                sendBtn.title = 'Send';
+                sendBtn.style.backgroundColor = '';
+                sendBtn.style.color = '';
+            }
+        }
+
+        function stopGeneration() {
+            if (currentAbortController) {
+                currentAbortController.abort();
+            }
+        }
+
         async function requestAIResponse(chatId, modelVal, aiMsgId, aiMessageElement, useWebSearch = false) {
             let seconds = 0;
             const timerEl = aiMessageElement.querySelector('.message-timer');
@@ -2682,13 +2761,16 @@
                 }
             }, 1000);
 
+            let accumulatedAnswer = "";
+            let accumulatedThought = "";
+
             try {
                 const activeKey = getActiveApiKey();
                 if (!activeKey) {
                     clearInterval(timerInterval);
                     if (timerEl) timerEl.remove();
                     aiMessageElement.querySelector('.message-text').textContent = 'Error: Please add and select a Gemini API key first.';
-                    sendBtn.disabled = false;
+                    setGeneratingState(false);
                     return;
                 }
 
@@ -2699,6 +2781,9 @@
                 }));
 
                 const activeSystemPrompt = getActiveSystemPrompt();
+
+                currentAbortController = new AbortController();
+                setGeneratingState(true);
 
                 const response = await fetch(WORKER_URL, {
                     method: 'POST',
@@ -2711,7 +2796,8 @@
                         webSearch: useWebSearch,
                         key: activeKey,
                         systemPrompt: activeSystemPrompt
-                    })
+                    }),
+                    signal: currentAbortController.signal
                 });
 
                 const textNode = aiMessageElement.querySelector('.message-text');
@@ -2733,7 +2819,7 @@
                         }
                     }
                     textNode.textContent = `Error: ${errorMessage}`;
-                    sendBtn.disabled = false;
+                    setGeneratingState(false);
                     return;
                 }
 
@@ -2752,8 +2838,6 @@
 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let accumulatedAnswer = "";
-                let accumulatedThought = "";
                 let buffer = "";
 
                 while (true) {
@@ -2776,6 +2860,8 @@
                                     const isThought = part?.thought === true;
 
                                     if (textChunk) {
+                                        const wasAtBottom = isUserAtBottom();
+
                                         if (isThought) {
                                             accumulatedThought += textChunk;
                                             thinkingDetails.style.display = 'block';
@@ -2790,7 +2876,10 @@
                                                 p.remove();
                                             }
                                         });
-                                        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                                        if (wasAtBottom) {
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                        }
                                     }
                                 } catch (e) {
 
@@ -2812,6 +2901,8 @@
                                 const isThought = part?.thought === true;
 
                                 if (textChunk) {
+                                    const wasAtBottom = isUserAtBottom();
+
                                     if (isThought) {
                                         accumulatedThought += textChunk;
                                         thinkingDetails.style.display = 'block';
@@ -2819,6 +2910,10 @@
                                     } else {
                                         accumulatedAnswer += textChunk;
                                         answerWrapper.innerHTML = marked.parse(accumulatedAnswer.replace(/\n{3,}/g, '\n\n'));
+                                    }
+
+                                    if (wasAtBottom) {
+                                        chatContainer.scrollTop = chatContainer.scrollHeight;
                                     }
                                 }
                             } catch (e) {}
@@ -2835,31 +2930,63 @@
                     accumulatedAnswer = 'Received empty response.';
                 }
 
-
-                const aiMsgObj = {
-                    id: aiMsgId,
-                    role: 'model',
-                    parts: [{ text: accumulatedAnswer }],
-                    displayText: accumulatedAnswer,
-                    thoughtText: accumulatedThought
-                };
-
-                const updatedChat = await getChat(chatId);
-                if (updatedChat) {
-                    updatedChat.messages.push(aiMsgObj);
-                    await saveChat(updatedChat);
-                }
-
             } catch (error) {
-                textNode.innerHTML = `<div class="answer-content">Network error: ${error.message}</div>`;
+                const answerWrapper = aiMessageElement.querySelector('.answer-content');
+                if (error.name === 'AbortError') {
+                    if (!accumulatedAnswer && !accumulatedThought) {
+                        if (answerWrapper) {
+                            answerWrapper.textContent = 'Generation stopped.';
+                        } else {
+                            aiMessageElement.querySelector('.message-text').textContent = 'Generation stopped.';
+                        }
+                        accumulatedAnswer = 'Generation stopped.';
+                    }
+                } else {
+                    if (answerWrapper) {
+                        answerWrapper.innerHTML = `Network error: ${error.message}`;
+                    } else {
+                        aiMessageElement.querySelector('.message-text').innerHTML = `Network error: ${error.message}`;
+                    }
+                }
             } finally {
                 clearInterval(timerInterval);
-                sendBtn.disabled = false;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+                setGeneratingState(false);
+
+                if (accumulatedAnswer || accumulatedThought) {
+                    const aiMsgObj = {
+                        id: aiMsgId,
+                        role: 'model',
+                        parts: [{ text: accumulatedAnswer }],
+                        displayText: accumulatedAnswer,
+                        thoughtText: accumulatedThought
+                    };
+
+                    const updatedChat = await getChat(chatId);
+                    if (updatedChat) {
+                        const exists = updatedChat.messages.some(m => m.id === aiMsgId);
+                        if (!exists) {
+                            updatedChat.messages.push(aiMsgObj);
+                        } else {
+                            const idx = updatedChat.messages.findIndex(m => m.id === aiMsgId);
+                            updatedChat.messages[idx] = aiMsgObj;
+                        }
+                        await saveChat(updatedChat);
+                    }
+                }
+
+
+                if (isUserAtBottom()) {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
             }
         }
 
         async function sendMessage() {
+            if (isGenerating) {
+                stopGeneration();
+                return;
+            }
+
             const prompt = promptInput.value.trim();
             const model = selectedModel;
 
@@ -2930,8 +3057,6 @@
             if (isFirstMessage) {
                 await loadHistory();
             }
-
-            sendBtn.disabled = true;
 
             const aiMsgId = (Date.now() + 1).toString();
             const aiMessageElement = appendMessage('', '', 'ai', aiMsgId);
@@ -3161,8 +3286,6 @@
                 appendMessage(senderText, renderedContent, typeText, msg.id, msg.parts, msg.thoughtText || "");
             });
 
-            sendBtn.disabled = true;
-
             const aiMsgId = Date.now().toString();
             const aiMessageElement = appendMessage('', '', 'ai', aiMsgId);
 
@@ -3199,6 +3322,7 @@
             await restoreChat(newChatId);
         }
 
+
         function updateHeaderButtonHighlights() {
 
             if (sidebar.classList.contains('open')) {
@@ -3221,6 +3345,7 @@
                 mobileSysPromptBtn.classList.remove('active');
             }
         }
+
 
         function setRightPanelClosedState(isClosed) {
 
@@ -3282,12 +3407,21 @@
         }
 
         newChatBtn.addEventListener('click', startNewChat);
-        sendBtn.addEventListener('click', sendMessage);
+
+        sendBtn.addEventListener('click', () => {
+            if (isGenerating) {
+                stopGeneration();
+            } else {
+                sendMessage();
+            }
+        });
 
         promptInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage();
+                if (!isGenerating) {
+                    sendMessage();
+                }
             }
         });
 
@@ -3299,6 +3433,63 @@
             } else {
                 searchBtn.classList.remove('active');
                 searchBtn.title = "Search the Web (Disabled)";
+            }
+        });
+
+
+        scrollUpBtn.addEventListener('click', () => {
+            const messages = Array.from(chatContainer.querySelectorAll('.message'));
+            if (messages.length === 0) return;
+
+            const currentScroll = chatContainer.scrollTop;
+            let targetMessage = null;
+
+
+            for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].offsetTop < currentScroll - 10) {
+                    targetMessage = messages[i];
+                    break;
+                }
+            }
+
+            if (targetMessage) {
+                chatContainer.scrollTo({
+                    top: targetMessage.offsetTop,
+                    behavior: 'smooth'
+                });
+            } else {
+                chatContainer.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        });
+
+        scrollDownBtn.addEventListener('click', () => {
+            const messages = Array.from(chatContainer.querySelectorAll('.message'));
+            if (messages.length === 0) return;
+
+            const currentScroll = chatContainer.scrollTop;
+            let targetMessage = null;
+
+
+            for (let i = 0; i < messages.length; i++) {
+                if (messages[i].offsetTop > currentScroll + 10) {
+                    targetMessage = messages[i];
+                    break;
+                }
+            }
+
+            if (targetMessage) {
+                chatContainer.scrollTo({
+                    top: targetMessage.offsetTop,
+                    behavior: 'smooth'
+                });
+            } else {
+                chatContainer.scrollTo({
+                    top: chatContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
             }
         });
 
@@ -3341,6 +3532,7 @@
             updateHeaderButtonHighlights();
             adjustInputHeight();
         }
+
         initializeApp();
     </script>
 </body>
